@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+b=$(xinput | grep UGTABLET | grep pointer)
+b=${b##*=}
+b=${b%%[*}
+
+[[ $# -ne 0 ]] && ( [[ $1 == '-h' ]] || [[ $1 == '--help' ]] ) && Help && exit
+
+
+out='HDMI-1-0'
+[[ $# -ne 0 ]] && out='eDP1'
+xinput map-to-output $b $out
+
+
+
+
+
