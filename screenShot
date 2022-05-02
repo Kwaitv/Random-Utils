@@ -1,0 +1,22 @@
+#!/usr/bin/bash
+xset -b
+date=$(date +'%Y-%m-%d-%H-%M-%S')
+orig=$(xdotool getactivewindow getwindowname)
+window=$(echo $orig | tr -dc '/ [:alnum:]')
+window=${window///}
+window=${window/\ \ /\ }
+window=${window// /}
+
+format=png
+imagePath=/tmp/${date}-${window}
+flag=0
+[[ $# -eq 0 ]] && import ${imagePath}.${format} && flag=1
+echo $flag
+[[ $flag -eq 0 ]] && [[ $1 == '-f' ]] && import -screen -window 'root' $imagePath.${format} && flag=1
+[[ $flag -eq 0 ]] && [[ $1 == '-w' ]] && import -screen -border -window "$orig" $imagePath.${format} && flag=1
+[[ $flag -eq 0 ]] && Help && exit
+
+xclip -sel c -t image/${format} ${imagePath}.${format}
+mogrify -quality 100 -format jpg ${imagePath}.${format}
+rm ${imagePath}.${format}
+mv ${imagePath}.jpg ~/Desktop/
