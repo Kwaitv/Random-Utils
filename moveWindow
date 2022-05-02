@@ -1,0 +1,77 @@
+#!/usr/bin/python
+import os
+import re
+import sys
+
+# pull data from std out
+def getData(command):
+    a = os.popen(command)
+    c = ''
+    b = 'a'
+    while(b != ''):
+        b = a.readline()
+        c += b
+    return c[:-1]
+
+# get focussed window location and geometry data
+def getWindowData():
+    window_dat = getData("xdotool getwindowfocus getwindowgeometry").split("\n")
+    loc = (int(re.search(r"[0-9]*,", window_dat[1]).group(0)[0:-1]),int(re.search(r",[0-9]*", window_dat[1]).group(0)[1:]))
+    geo = (int(re.search(r"[0-9]*x", window_dat[2]).group(0)[0:-1]),int(re.search(r"x[0-9]*", window_dat[2]).group(0)[1:]))
+    return loc, geo
+
+# get X session screen display position and resolutions
+def getScreen():    
+    b = getData("xrandr | grep ' connected' | sed 's/^[A-Z,a-z,0-9,-]* connected //g' | sed 's/primary //g' | sed 's/+/ /'").split("\n")
+    resolutions = []
+    positions = []
+    for i in range(len(b)):
+        res = re.search(r"[0-9]*x[0-9]*", b[i]).group(0)
+        a = (int(re.search(r"[0-9]*x", res).group(0)[0:-1]),int(re.search(r"x[0-9]*", res).group(0)[1:]))
+        resolutions.append(a)
+        pos = re.search(r"[0-9]*\+[0-9]*", b[i]).group(0)
+        a = (int(re.search(r"[0-9]*\+", pos).group(0)[0:-1]),int(re.search(r"\+[0-9]*", pos).group(0)[1:]))
+        positions.append(a)
+
+    return resolutions, positions
+
+# establish bounding ranges for each display
+def getBounds(res,pos):
+    bounds = []
+    for i in range(len(res)):
+        a = ((range(pos[i][0], pos[i][0]+res[i][0]), range(pos[i][1], pos[i][1]+res[i][1])))
+        bounds.append(a)
+
+    return bounds
+
+# get which window the focussed window is in
+def getWindowContain(loc, bounds):
+
+    a = len(res)
+    for i in range(len(res)):
+        if ((loc[0] in bounds[i][0]) and (loc[1] in bounds[i][1])):
+            a = i
+
+
+    return a
+    
+
+if __name__ == '__main__':
+    # establish parameters
+    res, pos = getScreen()
+    loc, geo = getWindowData()
+    bounds = getBounds(res, pos)
+
+
+    # determine new display to be located
+    old = (getWindowContain(loc, bounds)) % len(res)
+    if (len(sys.argv) > 1):
+        new = (getWindowContain(loc, bounds)-1) % len(res)
+    else:
+        new = (getWindowContain(loc, bounds)+1) % len(res)
+
+    # window move
+    if ((loc[0]+geo[0] in bounds[old][0]) and (loc[1]+geo[1] in bounds[old][1])):
+        getData("xdotool getwindowfocus windowmove -- {} {}".format(pos[new][0]+(loc[0]-pos[old][0]), pos[new][1]+(loc[1]-pos[old][1])))
+    else:
+        getData("xdotool getwindowfocus windowmove -- {} {}".format(pos[old][0]+50, pos[old][1]+50))
