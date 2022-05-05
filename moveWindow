@@ -75,3 +75,4 @@ if __name__ == '__main__':
         getData("xdotool getwindowfocus windowmove -- {} {}".format(pos[new][0]+(loc[0]-pos[old][0]), pos[new][1]+(loc[1]-pos[old][1])))
     else:
         getData("xdotool getwindowfocus windowmove -- {} {}".format(pos[old][0]+50, pos[old][1]+50))
+        getData("xdotool getwindowfocus windowsize -- {} {}".format(1000, 500))
